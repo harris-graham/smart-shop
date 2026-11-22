@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn -B -ntp -DskipTests package
 
 # ---- Runtime stage ---------------------------------------------------------
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:24-jre-alpine
 
 RUN addgroup -S smartshop && adduser -S smartshop -G smartshop
 
