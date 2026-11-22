@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head th:replace="~{fragments/layout :: head('Shop')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="hero p-4 p-md-5 mb-4">
+        <h1 class="display-6 fw-bold">Find your next smartphone</h1>
+        <p class="lead mb-0">Compare specs, read reviews and check live stock.</p>
+    </div>
+
+    <form class="card card-body shadow-sm mb-4" method="get" th:action="@{/shop}">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label" for="keyword">Search</label>
+                <input class="form-control" id="keyword" name="keyword" th:value="${keyword}"
+                       placeholder="Name">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="minPrice">Min price</label>
+                <input class="form-control" type="number" min="0" step="0.01" id="minPrice"
+                       name="minPrice" th:value="${minPrice}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="maxPrice">Max price</label>
+                <input class="form-control" type="number" min="0" step="0.01" id="maxPrice"
+                       name="maxPrice" th:value="${maxPrice}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="minRam">RAM (GB)</label>
+                <input class="form-control" type="number" min="0" id="minRam" name="minRam"
+                       th:value="${minRam}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="minStorage">Storage (GB)</label>
+                <input class="form-control" type="number" min="0" id="minStorage" name="minStorage"
+                       th:value="${minStorage}">
+            </div>
+            <div class="col-md-1 d-grid">
+                <button class="btn btn-primary" type="submit">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-4" th:if="${!products.empty}">
+        <div class="col-6 col-md-4 col-xl-3" th:each="product : ${products.content}"
+             th:attr="data-stock-row=${product.smartid}">
+            <div class="card product-card h-100 shadow-sm">
+                <a th:href="@{/shop/{id}(id=${product.smartid})}" class="text-decoration-none">
+                    <img class="card-img-top product-img" alt=""
+                         th:if="${product.smartimg != null and !product.smartimg.isEmpty()}"
+                         th:src="|data:image/jpeg;base64,${product.smartimg}|">
+                    <div class="product-img d-flex align-items-center justify-content-center text-muted"
+                         th:if="${product.smartimg == null or product.smartimg.isEmpty()}">
+                        No image
+                    </div>
+                </a>
+                <div class="card-body d-flex flex-column">
+                    <h2 class="h6">
+                        <a class="text-decoration-none text-dark"
+                           th:href="@{/shop/{id}(id=${product.smartid})}"
+                           th:text="${product.smartname}">Product</a>
+                    </h2>
+                    <p class="mb-1 text-muted small">
+                        <span th:text="${product.smartram}">8</span> GB RAM ·
+                        <span th:text="${product.smartstorage}">128</span> GB storage
+                    </p>
+                    <p class="fw-bold fs-5 mb-2" th:text="${product.smartprice} + ' Ar'">0 Ar</p>
+                    <p class="small mb-3">
+                        <span class="badge bg-success" th:if="${product.smartqty > 3}">In stock</span>
+                        <span class="badge bg-warning text-dark"
+                              th:if="${product.smartqty > 0 and product.smartqty le 3}">
+                            Only <span th:text="${product.smartqty}">3</span> left
+                        </span>
+                        <span class="badge bg-danger" th:if="${product.smartqty == 0}">Out of stock</span>
+                    </p>
+                    <form class="mt-auto d-flex gap-2" method="post" th:action="@{/cart/add}"
+                          th:if="${product.smartqty > 0}">
+                        <input type="hidden" name="smartid" th:value="${product.smartid}">
+                        <input class="form-control form-control-sm" type="number" name="quantity"
+                               value="1" min="1" th:max="${product.smartqty}" aria-label="Quantity">
+                        <button class="btn btn-sm btn-primary text-nowrap" type="submit">Add</button>
+                    </form>
+                    <button class="btn btn-sm btn-secondary mt-auto" type="button" disabled
+                            th:if="${product.smartqty == 0}">Out of stock</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info" th:if="${products.empty}">
+        No products match your filters.
+    </div>
+
+    <nav class="mt-4" th:if="${products.totalPages > 1}" aria-label="Product pages">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${products.first} ? 'disabled' : ''">
+                <a class="page-link"
+                   th:href="@{/shop(page=${products.number - 1},size=${products.size},keyword=${keyword},minPrice=${minPrice},maxPrice=${maxPrice},minRam=${minRam},minStorage=${minStorage})}">
+                    Previous
+                </a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}"
+                th:classappend="${products.number == i} ? 'active'">
+                <a class="page-link" th:text="${i + 1}"
+                   th:href="@{/shop(page=${i},size=${products.size},keyword=${keyword},minPrice=${minPrice},maxPrice=${maxPrice},minRam=${minRam},minStorage=${minStorage})}">
+                    1
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${products.last} ? 'disabled' : ''">
+                <a class="page-link"
+                   th:href="@{/shop(page=${products.number + 1},size=${products.size},keyword=${keyword},minPrice=${minPrice},maxPrice=${maxPrice},minRam=${minRam},minStorage=${minStorage})}">
+                    Next
+                </a>
+            </li>
+        </ul>
+    </nav>
+</main>
+
+<footer class="app-footer text-center py-4">
+    SmartShop · Spring Boot + PostgreSQL
+</footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,131 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  publish:
+    name: Build and publish the image
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Make the Maven wrapper executable
+        run: chmod +x mvnw
+
+      - name: Run the test suite
+        run: ./mvnw -B -ntp verify
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    name: Deploy to staging
+    needs: publish
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging')
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ vars.DEPLOYMENT_URL }}
+    steps:
+      - name: Deploy image digest
+        env:
+          DEPLOYMENT_WEBHOOK_URL: ${{ secrets.DEPLOYMENT_WEBHOOK_URL }}
+          DEPLOYMENT_WEBHOOK_TOKEN: ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
+          IMAGE: ${{ needs.publish.outputs.image }}
+          DIGEST: ${{ needs.publish.outputs.digest }}
+        run: |
+          test -n "$DEPLOYMENT_WEBHOOK_URL" || { echo "Set DEPLOYMENT_WEBHOOK_URL in the staging environment." >&2; exit 1; }
+          test -n "$DEPLOYMENT_WEBHOOK_TOKEN" || { echo "Set DEPLOYMENT_WEBHOOK_TOKEN in the staging environment." >&2; exit 1; }
+          jq -n --arg image "$IMAGE" --arg digest "$DIGEST" --arg environment staging \
+            --arg ref "$GITHUB_REF" '{image: $image, digest: $digest, environment: $environment, ref: $ref}' > payload.json
+          curl --fail-with-body --silent --show-error --retry 3 \
+            -H "Authorization: Bearer $DEPLOYMENT_WEBHOOK_TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @payload.json "$DEPLOYMENT_WEBHOOK_URL"
+
+  deploy-production:
+    name: Deploy to production
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.environment == 'production')
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.DEPLOYMENT_URL }}
+    steps:
+      - name: Deploy image digest
+        env:
+          DEPLOYMENT_WEBHOOK_URL: ${{ secrets.DEPLOYMENT_WEBHOOK_URL }}
+          DEPLOYMENT_WEBHOOK_TOKEN: ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
+          IMAGE: ${{ needs.publish.outputs.image }}
+          DIGEST: ${{ needs.publish.outputs.digest }}
+        run: |
+          test -n "$DEPLOYMENT_WEBHOOK_URL" || { echo "Set DEPLOYMENT_WEBHOOK_URL in the production environment." >&2; exit 1; }
+          test -n "$DEPLOYMENT_WEBHOOK_TOKEN" || { echo "Set DEPLOYMENT_WEBHOOK_TOKEN in the production environment." >&2; exit 1; }
+          jq -n --arg image "$IMAGE" --arg digest "$DIGEST" --arg environment production \
+            --arg ref "$GITHUB_REF" '{image: $image, digest: $digest, environment: $environment, ref: $ref}' > payload.json
+          curl --fail-with-body --silent --show-error --retry 3 \
+            -H "Authorization: Bearer $DEPLOYMENT_WEBHOOK_TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @payload.json "$DEPLOYMENT_WEBHOOK_URL"

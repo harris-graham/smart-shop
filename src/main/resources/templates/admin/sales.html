@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Sales')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container-fluid py-4 px-lg-5">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0">Sales</h1>
+        <a class="btn btn-outline-success"
+           th:href="@{/admin/sales/export(from=${from},to=${to})}">Export CSV</a>
+    </div>
+
+    <form class="row g-2 mb-3" method="get" th:action="@{/admin/sales}">
+        <div class="col-sm-4 col-md-3">
+            <label class="form-label small mb-1">From</label>
+            <input class="form-control" type="date" name="from" th:value="${from}">
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <label class="form-label small mb-1">To</label>
+            <input class="form-control" type="date" name="to" th:value="${to}">
+        </div>
+        <div class="col-auto d-flex align-items-end gap-2">
+            <button class="btn btn-outline-primary" type="submit">Filter</button>
+            <a class="btn btn-outline-secondary" th:href="@{/admin/sales}">Reset</a>
+        </div>
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" data-datatable>
+                <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th class="text-end">Unit price</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Total</th>
+                    <th>Customer</th>
+                    <th>Employee</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="sale : ${sales}">
+                    <td th:text="${sale.saleDate}">2026-01-01</td>
+                    <td th:text="${sale.smartphone == null ? '—' : sale.smartphone.smartname}">Product</td>
+                    <td class="text-end"
+                        th:text="${sale.smartphone == null ? '—' : sale.smartphone.smartprice} + ' Ar'">0 Ar</td>
+                    <td class="text-end" th:text="${sale.saleqty}">1</td>
+                    <td class="text-end fw-semibold" th:text="${sale.saletotal} + ' Ar'">0 Ar</td>
+                    <td th:text="${sale.customer == null ? '—' : sale.customer.custname}">Customer</td>
+                    <td th:text="${sale.employee == null ? '—' : sale.employee.empname}">Employee</td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${sale.status == 'CANCELLED'} ? 'bg-danger' : 'bg-success'"
+                              th:text="${sale.status}">COMPLETED</span>
+                    </td>
+                </tr>
+                <tr th:if="${sales.empty}">
+                    <td colspan="8" class="text-center text-muted py-4">No sales found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head th:replace="~{fragments/layout :: head('Cart')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1 class="h3 mb-4">Shopping cart</h1>
+
+    <div class="alert alert-info" th:if="${cart.items.empty}">
+        Your cart is empty. <a th:href="@{/shop}">Browse products</a>.
+    </div>
+
+    <div class="row g-4" th:if="${!cart.items.empty}">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-center" style="width: 180px">Quantity</th>
+                            <th class="text-end">Subtotal</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${cart.items}">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img class="product-img-sm" alt=""
+                                         th:if="${item.smartimg != null and !item.smartimg.isEmpty()}"
+                                         th:src="|data:image/jpeg;base64,${item.smartimg}|">
+                                    <a class="text-decoration-none"
+                                       th:href="@{/shop/{id}(id=${item.smartid})}"
+                                       th:text="${item.smartname}">Product</a>
+                                </div>
+                            </td>
+                            <td class="text-end" th:text="${item.priceAtAdd} + ' Ar'">0 Ar</td>
+                            <td>
+                                <form class="d-flex gap-1 justify-content-center" method="post"
+                                      th:action="@{/cart/update/{id}(id=${item.cartitemid})}">
+                                    <input class="form-control form-control-sm" type="number" name="quantity"
+                                           min="1" th:value="${item.quantity}" aria-label="Quantity">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">Update</button>
+                                </form>
+                            </td>
+                            <td class="text-end" th:text="${item.subtotal} + ' Ar'">0 Ar</td>
+                            <td class="text-end">
+                                <form method="post"
+                                      th:action="@{/cart/remove/{id}(id=${item.cartitemid})}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                        <tfoot>
+                        <tr class="table-light">
+                            <th colspan="3" class="text-end">Total</th>
+                            <th class="text-end" th:text="${cart.total} + ' Ar'">0 Ar</th>
+                            <th></th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <form method="post" th:action="@{/cart/clear}" class="mt-3">
+                <button class="btn btn-outline-secondary" type="submit">Clear cart</button>
+            </form>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Checkout</h2>
+                    <form method="post" th:action="@{/cart/checkout}" th:object="${checkoutForm}">
+                        <div class="mb-3"
+                             sec:authorize="hasAnyRole('ADMIN','EMPLOYEE')">
+                            <label class="form-label" for="customerId">Customer</label>
+                            <select class="form-select" id="customerId" th:field="*{customerId}" required>
+                                <option value="" disabled selected>Select a customer</option>
+                                <option th:each="customer : ${customers}"
+                                        th:value="${customer.custid}"
+                                        th:text="|${customer.custname} · ${customer.custpnum}|">
+                                    Customer
+                                </option>
+                            </select>
+                            <p class="form-text">
+                                Staff checkout: choose the customer for this in-store sale.
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="couponCode">Coupon code (optional)</label>
+                            <input class="form-control" id="couponCode" th:field="*{couponCode}"
+                                   placeholder="e.g. WELCOME10" autocomplete="off">
+                            <div class="form-text">Discounts are validated when you place the order.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="notes">Order notes (optional)</label>
+                            <textarea class="form-control" id="notes" rows="2"
+                                      th:field="*{notes}"></textarea>
+                        </div>
+                        <button class="btn btn-success w-100" type="submit">Place order</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

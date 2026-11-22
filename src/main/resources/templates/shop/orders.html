@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head th:replace="~{fragments/layout :: head('Orders')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Orders</h1>
+        <a class="btn btn-outline-primary" th:href="@{/shop}">Continue shopping</a>
+    </div>
+
+    <div class="alert alert-info" th:if="${orders.empty}">
+        No orders yet.
+    </div>
+
+    <div class="card shadow-sm" th:if="${!orders.empty}">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" data-datatable>
+                <thead class="table-light">
+                <tr>
+                    <th>Order</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Employee</th>
+                    <th class="text-end">Total</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th class="no-sort"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order : ${orders}">
+                    <td class="fw-semibold" th:text="${order.orderNumber}">ORD-1</td>
+                    <td th:text="${order.orderDate}">2026-01-01</td>
+                    <td th:text="${order.customer == null ? '—' : order.customer.custname}">Customer</td>
+                    <td th:text="${order.employee == null ? '—' : order.employee.empname}">Employee</td>
+                    <td class="text-end" th:text="${order.totalAmount} + ' Ar'">0 Ar</td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${order.status == 'CANCELLED'} ? 'bg-danger' : (${order.status == 'DELIVERED'} ? 'bg-success' : 'bg-primary')"
+                              th:text="${order.status}">PENDING</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary" th:text="${order.paymentStatus}">PENDING</span>
+                    </td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary"
+                           th:href="@{/orders/{id}(id=${order.orderid})}">View</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

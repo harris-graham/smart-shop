@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Wishlist')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1 class="h3 mb-4">Wishlist</h1>
+
+    <div class="alert alert-info" th:if="${wishlist.empty}">
+        Your wishlist is empty. <a th:href="@{/shop}">Browse products</a>.
+    </div>
+
+    <div class="row g-4" th:if="${!wishlist.empty}">
+        <div class="col-6 col-md-4 col-xl-3" th:each="item : ${wishlist}">
+            <div class="card product-card h-100 shadow-sm">
+                <a th:href="@{/shop/{id}(id=${item.smartphone.smartid})}" class="text-decoration-none">
+                    <img class="card-img-top product-img" alt=""
+                         th:if="${item.smartphone.smartimg != null and !item.smartphone.smartimg.isEmpty()}"
+                         th:src="|data:image/jpeg;base64,${item.smartphone.smartimg}|">
+                    <div class="product-img d-flex align-items-center justify-content-center text-muted"
+                         th:if="${item.smartphone.smartimg == null or item.smartphone.smartimg.isEmpty()}">
+                        No image
+                    </div>
+                </a>
+                <div class="card-body d-flex flex-column">
+                    <h2 class="h6" th:text="${item.smartphone.smartname}">Product</h2>
+                    <p class="fw-bold" th:text="${item.smartphone.smartprice} + ' Ar'">0 Ar</p>
+                    <div class="mt-auto d-flex gap-2">
+                        <form class="flex-grow-1" method="post" th:action="@{/cart/add}">
+                            <input type="hidden" name="smartid" th:value="${item.smartphone.smartid}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button class="btn btn-sm btn-primary w-100" type="submit"
+                                    th:disabled="${item.smartphone.smartqty == 0}">Add to cart</button>
+                        </form>
+                        <form method="post"
+                              th:action="@{/wishlist/{id}/remove(id=${item.smartphone.smartid})}">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

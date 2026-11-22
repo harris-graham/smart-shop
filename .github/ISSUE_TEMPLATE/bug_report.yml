@@ -1,0 +1,59 @@
+name: Bug report
+description: Report something that is broken
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please include enough detail
+        for someone else to reproduce it.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in as ...
+        2. Open ...
+        3. Click ...
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      placeholder: main @ abc1234
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: How are you running SmartShop?
+      options:
+        - Local Maven (./mvnw spring-boot:run)
+        - Docker Compose
+        - Deployed environment
+        - Other
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or stack traces
+      render: shell

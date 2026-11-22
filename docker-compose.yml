@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: smartshop
+      POSTGRES_USER: smartshop
+      POSTGRES_PASSWORD: smartshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - smartshop-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartshop -d smartshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/smartshop
+      DATABASE_USER: smartshop
+      DATABASE_PASSWORD: smartshop
+      THYMELEAF_CACHE: "true"
+      # Leave empty to use the built-in mock payment provider.
+      STRIPE_API_KEY: ""
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  smartshop-db:

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head th:replace="~{fragments/layout :: head(${product.smartname})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <a class="btn btn-sm btn-outline-secondary mb-3" th:href="@{/shop}">&larr; Back to shop</a>
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <img class="card-img-top product-img" style="height: 320px" alt=""
+                     th:if="${product.smartimg != null and !product.smartimg.isEmpty()}"
+                     th:src="|data:image/jpeg;base64,${product.smartimg}|">
+                <div class="d-flex align-items-center justify-content-center text-muted"
+                     style="height: 320px" th:if="${product.smartimg == null or product.smartimg.isEmpty()}">
+                    No image
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <h1 class="h3" th:text="${product.smartname}">Product</h1>
+            <p class="rating mb-2">
+                <span th:text="${averageRating}">0</span>/5
+                <span class="text-muted">(<span th:text="${reviewCount}">0</span> reviews)</span>
+            </p>
+            <p class="display-6 fw-bold" th:text="${product.smartprice} + ' Ar'">0 Ar</p>
+            <dl class="row">
+                <dt class="col-5 col-md-3">RAM</dt>
+                <dd class="col-7 col-md-9"><span th:text="${product.smartram}">8</span> GB</dd>
+                <dt class="col-5 col-md-3">Storage</dt>
+                <dd class="col-7 col-md-9"><span th:text="${product.smartstorage}">128</span> GB</dd>
+                <dt class="col-5 col-md-3">Stock</dt>
+                <dd class="col-7 col-md-9" th:attr="data-stock-smartid=${product.smartid}">
+                    <span class="badge bg-success" th:if="${product.smartqty > 3}"
+                          th:text="${product.smartqty} + ' available'">10</span>
+                    <span class="badge bg-warning text-dark"
+                          th:if="${product.smartqty > 0 and product.smartqty le 3}"
+                          th:text="|Only ${product.smartqty} left|">2</span>
+                    <span class="badge bg-danger" th:if="${product.smartqty == 0}">Out of stock</span>
+                    <span class="small text-muted ms-1" data-stock-note
+                          th:text="|(${product.smartqty} in stock)|">(10 in stock)</span>
+                </dd>
+            </dl>
+
+            <div class="d-flex flex-wrap gap-2">
+                <form class="d-flex gap-2" method="post" th:action="@{/cart/add}"
+                      th:if="${product.smartqty > 0}">
+                    <input type="hidden" name="smartid" th:value="${product.smartid}">
+                    <input class="form-control" style="max-width: 100px" type="number" name="quantity"
+                           value="1" min="1" th:max="${product.smartqty}" aria-label="Quantity">
+                    <button class="btn btn-primary" type="submit">Add to cart</button>
+                </form>
+                <form method="post" th:if="${isCustomer and !wishlisted}"
+                      th:action="@{/wishlist/{id}(id=${product.smartid})}">
+                    <button class="btn btn-outline-danger" type="submit">Add to wishlist</button>
+                </form>
+                <form method="post" th:if="${isCustomer and wishlisted}"
+                      th:action="@{/wishlist/{id}/remove(id=${product.smartid})}">
+                    <button class="btn btn-outline-secondary" type="submit">Remove from wishlist</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <section class="mt-5">
+        <h2 class="h4 mb-3">Customer reviews</h2>
+        <div class="alert alert-secondary" th:if="${reviews.empty}">
+            No approved reviews yet.
+        </div>
+        <div class="card review-card mb-3" th:each="review : ${reviews}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <strong th:text="${review.customer == null ? 'Customer' : review.customer.custname}">
+                        Customer
+                    </strong>
+                    <span class="rating" th:text="${review.rating} + '/5'">5/5</span>
+                </div>
+                <p class="mb-0 mt-2" th:text="${review.comment}">Great phone.</p>
+                <small class="text-muted" th:text="${review.createdAt}"></small>
+            </div>
+        </div>
+
+        <div class="card mt-4" th:if="${isCustomer}">
+            <div class="card-body">
+                <h3 class="h5">Write a review</h3>
+                <form method="post" th:action="@{/reviews}" th:object="${reviewForm}">
+                    <input type="hidden" th:field="*{smartid}">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label" for="rating">Rating</label>
+                            <select class="form-select" id="rating" th:field="*{rating}">
+                                <option th:each="i : ${#numbers.sequence(1, 5)}" th:value="${i}"
+                                        th:text="${i}">5</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9">
+                            <label class="form-label" for="comment">Comment</label>
+                            <textarea class="form-control" id="comment" rows="3"
+                                      th:field="*{comment}"></textarea>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3" type="submit">Submit review</button>
+                    <p class="text-muted small mt-2 mb-0">
+                        Reviews are published after administrator moderation.
+                    </p>
+                </form>
+            </div>
+        </div>
+        <div class="alert alert-info mt-4" th:unless="${isCustomer}">
+            Sign in with a customer account to write a review.
+        </div>
+    </section>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('My account')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1 class="h3 mb-1">My account</h1>
+    <p class="text-muted mb-4" th:text="|Signed in as ${displayName}|">Signed in</p>
+
+    <div class="row g-4">
+        <div class="col-lg-7" th:if="${isCustomer}">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Profile</h2>
+                    <form method="post" th:action="@{/account/customer}"
+                          th:object="${customerForm}">
+                        <div class="mb-3">
+                            <label class="form-label" for="custname">Full name</label>
+                            <input class="form-control" id="custname" th:field="*{custname}" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="custpnum">Phone</label>
+                                <input class="form-control" id="custpnum" th:field="*{custpnum}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="email">Email (login)</label>
+                                <input class="form-control" type="email" id="email" th:field="*{email}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="custaddress">Address</label>
+                            <input class="form-control" id="custaddress" th:field="*{custaddress}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="password">New password (optional)</label>
+                            <input class="form-control" type="password" id="password"
+                                   th:field="*{password}" autocomplete="new-password">
+                        </div>
+                        <button class="btn btn-primary" type="submit">Save changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7" th:unless="${isCustomer}">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Staff account</h2>
+                    <form method="post" th:action="@{/account/employee}">
+                        <div class="mb-3">
+                            <label class="form-label" for="empuname">Username</label>
+                            <input class="form-control" id="empuname" name="empuname"
+                                   th:value="${employeeForm.empuname}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="emppword">New password (optional)</label>
+                            <input class="form-control" type="password" id="emppword" name="emppword"
+                                   autocomplete="new-password">
+                        </div>
+                        <button class="btn btn-primary" type="submit">Save changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5 mb-3">Appearance</h2>
+                        <p class="text-muted small">
+                            Your choice is stored with your account and applied on every device
+                            where you sign in.
+                        </p>
+                        <div class="d-flex gap-2">
+                            <form th:action="@{/theme}" method="post">
+                                <input type="hidden" name="theme" value="light">
+                                <button class="btn btn-sm"
+                                        th:classappend="${theme == 'light'} ? 'btn-primary' : 'btn-outline-secondary'"
+                                        type="submit">Light</button>
+                            </form>
+                            <form th:action="@{/theme}" method="post">
+                                <input type="hidden" name="theme" value="dark">
+                                <button class="btn btn-sm"
+                                        th:classappend="${theme == 'dark'} ? 'btn-primary' : 'btn-outline-secondary'"
+                                        type="submit">Dark</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5 mb-3">Shortcuts</h2>
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-outline-primary" th:href="@{/orders}">Orders</a>
+                        <a class="btn btn-outline-primary" th:href="@{/cart}">Cart</a>
+                        <a class="btn btn-outline-primary" th:href="@{/shop}">Shop</a>
+                        <a class="btn btn-outline-danger" th:href="@{/wishlist}"
+                           th:if="${isCustomer}">Wishlist</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

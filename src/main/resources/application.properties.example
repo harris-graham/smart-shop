@@ -1,0 +1,20 @@
+# Copy this file to application-local.properties (or export the variables)
+# when you need machine-specific values. Never commit real credentials.
+
+# --- Database -------------------------------------------------------------
+DATABASE_URL=jdbc:postgresql://localhost:5432/smartshop
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password_here
+
+# --- Server ---------------------------------------------------------------
+PORT=8080
+
+# --- Application ----------------------------------------------------------
+LOG_LEVEL=INFO
+THYMELEAF_CACHE=false
+LOW_STOCK_THRESHOLD=3
+
+# --- Payments -------------------------------------------------------------
+# Leave STRIPE_API_KEY empty to use the built-in mock payment provider.
+STRIPE_API_KEY=
+STRIPE_CURRENCY=usd

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Customers')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container-fluid py-4 px-lg-5">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0">Customers</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomer">
+            Add customer
+        </button>
+    </div>
+
+    <form class="row g-2 mb-3" method="get" th:action="@{/admin/customers}">
+        <div class="col-sm-6 col-md-4">
+            <input class="form-control" name="keyword" th:value="${keyword}" placeholder="Search customers">
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-primary" type="submit">Search</button>
+            <a class="btn btn-outline-secondary" th:href="@{/admin/customers}">Reset</a>
+        </div>
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" data-datatable>
+                <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Email</th>
+                    <th class="text-end">Orders</th>
+                    <th class="no-sort text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="customer : ${customers}">
+                    <td class="fw-semibold" th:text="${customer.custname}">Customer</td>
+                    <td th:text="${customer.custpnum}">000</td>
+                    <td th:text="${customer.custaddress}">Address</td>
+                    <td th:text="${customer.email}">email@example.com</td>
+                    <td class="text-end" th:text="${customer.salesum}">0</td>
+                    <td class="text-end text-nowrap">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                th:attr="data-bs-target=|#editCust-${customer.custid}|">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                th:attr="data-bs-target=|#deleteCust-${customer.custid}|">Delete</button>
+                    </td>
+                </tr>
+                <tr th:if="${customers.empty}">
+                    <td colspan="6" class="text-center text-muted py-4">No customers found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addCustomer" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <form method="post" th:action="@{/admin/customers}">
+                    <div class="modal-header">
+                        <h2 class="modal-title h5">Add customer</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Full name</label>
+                                <input class="form-control" name="custname" maxlength="60" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input class="form-control" name="custpnum" maxlength="20"
+                                       pattern="[0-9]*">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                <input class="form-control" name="custaddress" maxlength="100">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email (optional portal login)</label>
+                                <input class="form-control" type="email" name="email" maxlength="100">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password (optional)</label>
+                                <input class="form-control" type="password" name="password" maxlength="60">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" type="submit">Add customer</button>
+                        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:each="customer : ${customers}">
+        <div class="modal fade" th:id="|editCust-${customer.custid}|" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <form method="post"
+                          th:action="@{/admin/customers/{id}(id=${customer.custid})}">
+                        <div class="modal-header">
+                            <h2 class="modal-title h5" th:text="|Edit ${customer.custname}|">Edit customer</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Full name</label>
+                                    <input class="form-control" name="custname" maxlength="60"
+                                           th:value="${customer.custname}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone</label>
+                                    <input class="form-control" name="custpnum" maxlength="20"
+                                           pattern="[0-9]*" th:value="${customer.custpnum}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Address</label>
+                                    <input class="form-control" name="custaddress" maxlength="100"
+                                           th:value="${customer.custaddress}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input class="form-control" type="email" name="email"
+                                           maxlength="100" th:value="${customer.email}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">New password (optional)</label>
+                                    <input class="form-control" type="password" name="password"
+                                           maxlength="60">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" type="submit">Save changes</button>
+                            <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" th:id="|deleteCust-${customer.custid}|" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="post"
+                          th:action="@{/admin/customers/{id}/delete(id=${customer.custid})}">
+                        <div class="modal-header">
+                            <h2 class="modal-title h5 text-danger">Delete customer</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            Delete <strong th:text="${customer.custname}">customer</strong>?
+                            Their orders, reviews and wishlist are removed as well.
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-danger" type="submit">Delete</button>
+                            <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

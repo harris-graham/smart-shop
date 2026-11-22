@@ -1,0 +1,37 @@
+{
+    "name": "SmartShop — Smartphones",
+    "short_name": "SmartShop",
+    "description": "Browse smartphones, read reviews, manage your cart and track orders.",
+    "start_url": "/shop",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#f6f7fb",
+    "theme_color": "#0d6efd",
+    "categories": ["shopping", "business"],
+    "icons": [
+        {
+            "src": "/assets/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Shop",
+            "short_name": "Shop",
+            "url": "/shop"
+        },
+        {
+            "name": "My orders",
+            "short_name": "Orders",
+            "url": "/orders"
+        },
+        {
+            "name": "Cart",
+            "short_name": "Cart",
+            "url": "/cart"
+        }
+    ]
+}

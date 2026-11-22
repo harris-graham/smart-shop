@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en" th:attr="data-bs-theme=${theme},data-theme=${theme}">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · SmartShop'">SmartShop</title>
+    <script th:inline="javascript">
+        // Runs before the first paint so a dark-mode visitor never sees a white
+        // flash while the stylesheets load. The server-rendered value is the
+        // visitor's saved profile preference; the cookie wins if it is newer.
+        (function () {
+            var fromServer = /*[[${theme}]]*/ 'light';
+            var theme = (fromServer === 'dark' || fromServer === 'light') ? fromServer : 'light';
+            try {
+                var match = document.cookie.match(/(?:^|;\s*)smartshop-theme=(dark|light)/);
+                if (match) {
+                    theme = match[1];
+                }
+            } catch (ignore) {
+            }
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.style.colorScheme = theme;
+        })();
+    </script>
+    <link rel="manifest" th:href="@{/manifest.webmanifest}">
+    <meta name="theme-color" content="#0d6efd" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#111418" media="(prefers-color-scheme: dark)">
+    <meta name="description"
+          content="SmartShop — buy smartphones online with live stock, reviews and order tracking.">
+    <link rel="icon" type="image/svg+xml" th:href="@{/assets/icon.svg}">
+    <link rel="apple-touch-icon" th:href="@{/assets/icon.svg}">
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/dataTables.bootstrap5.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" th:href="@{/}">SMART SHOP</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/shop}">Shop</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/cart}">
+                        Cart
+                        <span class="badge bg-primary" data-cart-count sec:authorize="isAuthenticated()"
+                              th:classappend="${cartCount == null or cartCount == 0} ? 'd-none' : ''"
+                              th:text="${cartCount != null ? cartCount : 0}">0</span>
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('CUSTOMER')">
+                    <a class="nav-link" th:href="@{/orders}">My orders</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('CUSTOMER')">
+                    <a class="nav-link" th:href="@{/wishlist}">Wishlist</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN','EMPLOYEE')">
+                    <a class="nav-link" th:href="@{/orders}">Orders</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link" th:href="@{/admin/dashboard}">Admin</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item me-lg-2">
+                    <form th:action="@{/theme}" method="post" class="d-inline"
+                          data-theme-toggle>
+                        <input type="hidden" name="theme"
+                               th:value="${theme == 'dark'} ? 'light' : 'dark'">
+                        <button type="submit" class="btn btn-sm btn-outline-light"
+                                data-theme-toggle-label
+                                th:attr="aria-label=${theme == 'dark'} ? 'Switch to light theme' : 'Switch to dark theme'">
+                            <span th:if="${theme != 'dark'}">Dark mode</span>
+                            <span th:if="${theme == 'dark'}">Light mode</span>
+                        </button>
+                    </form>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/account}" sec:authentication="name">Account</a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button class="btn btn-link nav-link" type="submit">Logout</button>
+                    </form>
+                </li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" th:href="@{/login}">Login</a>
+                </li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" th:href="@{/register}">Register</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div th:fragment="flash">
+    <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${message}">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${error}">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class="alert alert-warning alert-dismissible fade show no-print"
+         role="alert" data-offline-banner hidden>
+        You are offline. Showing the last cached pages.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
+<footer th:fragment="footer" class="app-footer text-center py-4">
+    <div class="container">
+        SmartShop · Spring Boot + PostgreSQL
+        <span class="d-none d-md-inline">·</span>
+        <a class="link-secondary" th:href="@{/offline}">Offline page</a>
+    </div>
+</footer>
+
+<div th:fragment="scripts">
+    <script th:src="@{/js/jquery-3.5.1.js}"></script>
+    <script th:src="@{/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/jquery.dataTables.min.js}"></script>
+    <script th:src="@{/js/dataTables.bootstrap5.min.js}"></script>
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/realtime.js}"></script>
+</div>
+</body>
+</html>

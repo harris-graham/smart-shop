@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Sign in')}"></head>
+<body class="bg-dark">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h1 class="h3 text-center mb-1">SMART SHOP</h1>
+                    <p class="text-center text-muted mb-4">Sign in to continue</p>
+
+                    <div th:replace="~{fragments/layout :: flash}"></div>
+                    <div class="alert alert-danger" th:if="${param.error}">
+                        Invalid username/email or password.
+                    </div>
+                    <div class="alert alert-success" th:if="${param.logout}">
+                        You have been signed out.
+                    </div>
+
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="username">Username or email</label>
+                            <input class="form-control" id="username" name="username"
+                                   autocomplete="username" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="password">Password</label>
+                            <input class="form-control" type="password" id="password" name="password"
+                                   autocomplete="current-password" required>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Sign in</button>
+                    </form>
+
+                    <p class="text-center mt-4 mb-0">
+                        New customer?
+                        <a th:href="@{/register}">Create an account</a>
+                    </p>
+                    <p class="text-center text-muted small mt-3 mb-0">
+                        Demo administrator: <code>admin</code> / <code>admin123</code>
+                    </p>
+                    <form th:action="@{/theme}" method="post" class="text-center mt-2"
+                          data-theme-toggle>
+                        <input type="hidden" name="theme"
+                               th:value="${theme == 'dark'} ? 'light' : 'dark'">
+                        <button class="btn btn-sm btn-link" type="submit"
+                                data-theme-toggle-label>Switch theme</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

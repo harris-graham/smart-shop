@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/layout :: head('Promotions')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-0">Promotions</h1>
+            <p class="text-muted mb-0">
+                Coupon codes customers can enter at checkout. Usage is counted per order.
+            </p>
+        </div>
+        <a class="btn btn-outline-primary" th:href="@{/admin/dashboard}">Dashboard</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-semibold"
+                     th:text="${couponForm.couponid != null} ? 'Edit coupon' : 'New coupon'">
+                    New coupon
+                </div>
+                <div class="card-body">
+                    <form method="post"
+                          th:action="${couponForm.couponid != null} ? @{/admin/promotions/{id}(id=${couponForm.couponid})} : @{/admin/promotions}"
+                          th:object="${couponForm}">
+                        <div class="mb-3">
+                            <label class="form-label" for="code">Code</label>
+                            <input class="form-control" id="code" th:field="*{code}"
+                                   placeholder="WELCOME10" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="description">Description</label>
+                            <input class="form-control" id="description" th:field="*{description}"
+                                   placeholder="10% off the first order">
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="discountType">Type</label>
+                                <select class="form-select" id="discountType" th:field="*{discountType}">
+                                    <option value="PERCENT">Percentage</option>
+                                    <option value="FIXED">Fixed amount</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="discountValue">Value</label>
+                                <input class="form-control" type="number" step="0.01" min="0"
+                                       id="discountValue" th:field="*{discountValue}" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="minOrderAmount">Minimum spend</label>
+                                <input class="form-control" type="number" step="0.01" min="0"
+                                       id="minOrderAmount" th:field="*{minOrderAmount}">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label" for="expiryDate">Expiry date</label>
+                                <input class="form-control" type="date" id="expiryDate"
+                                       th:field="*{expiryDate}">
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="active"
+                                   th:field="*{active}">
+                            <label class="form-check-label" for="active">Active</label>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" type="submit">Save coupon</button>
+                            <a class="btn btn-outline-secondary"
+                               th:href="@{/admin/promotions}"
+                               th:if="${couponForm.couponid != null}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-semibold">Existing coupons</div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" data-datatable>
+                        <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Discount</th>
+                            <th>Min. spend</th>
+                            <th>Expires</th>
+                            <th class="text-end">Used</th>
+                            <th>Status</th>
+                            <th class="no-sort"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="coupon : ${coupons}">
+                            <td>
+                                <div class="fw-semibold" th:text="${coupon.code}">WELCOME10</div>
+                                <small class="text-muted" th:text="${coupon.description}">Description</small>
+                            </td>
+                            <td th:text="${coupon.discountType} + ' ' + ${coupon.discountValue}">
+                                PERCENT 10
+                            </td>
+                            <td th:text="${coupon.minOrderAmount}">0</td>
+                            <td th:text="${coupon.expiryDate} ?: '—'">—</td>
+                            <td class="text-end" th:text="${coupon.usageCount}">0</td>
+                            <td>
+                                <span class="badge bg-success" th:if="${coupon.active}">Active</span>
+                                <span class="badge bg-secondary" th:unless="${coupon.active}">Disabled</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/admin/promotions/{id}/edit(id=${coupon.couponid})}">Edit</a>
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/promotions/{id}/toggle(id=${coupon.couponid})}">
+                                    <input type="hidden" name="active"
+                                           th:value="${!coupon.active}">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit"
+                                            th:text="${coupon.active} ? 'Disable' : 'Enable'">
+                                        Disable
+                                    </button>
+                                </form>
+                                <form class="d-inline" method="post"
+                                      th:action="@{/admin/promotions/{id}/delete(id=${coupon.couponid})}">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${coupons.empty}">
+                            <td colspan="7" class="text-center text-muted py-4">
+                                No coupons yet. Create one to offer a discount at checkout.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
